@@ -1,0 +1,65 @@
+{
+  "name": "amazon-ml-challenge-2026",
+  "version": "1.0.0",
+  "description": "Amazon ML Challenge 2026: Business Entity Resolution Solution targeting macro-averaged F_0.5 score.",
+  "tech_stack": [
+    "Python 3.11+",
+    "uv",
+    "Polars",
+    "Pandas",
+    "RapidFuzz",
+    "Scikit-learn",
+    "LightGBM",
+    "Sentence-Transformers"
+  ],
+  "conventions": [
+    "All TSV files must be read and written with explicit tab separator sep=\"\\t\"",
+    "Candidate generation (blocking) must achieve >= 95% recall ceiling before filtering",
+    "Precision-heavy threshold optimization calibrated specifically for macro-averaged F_0.5",
+    "Zero-match singletons must output empty string to receive 1.0 entity score",
+    "Country label is treated as open set of strings (US, India, France, etc.) without hardcoding",
+    "Source 1 entities can only match Source 2 (S2-*) and Source 3 (S3-*) entities",
+    "All final predictions in matching_results.tsv must be a strict subset of candidate_pairs.tsv"
+  ],
+  "architecture_patterns": [
+    "Two-stage pipeline: High-recall candidate blocking followed by high-precision ML re-ranking",
+    "Multi-index blocking: Inverted index on standardized name tokens + n-gram locality + TF-IDF blocking",
+    "Rich pairwise feature engineering: Levenshtein, Jaro-Winkler, Token Sort/Set ratios, Address component overlap, Postal/PIN match",
+    "GBDT classification with custom F_0.5 objective or post-hoc threshold tuning per country / slice",
+    "Strict submission packaging conforming to the competition specification"
+  ],
+  "file_structure": {
+    "dataset/train": "train_source1.tsv, train_source2.tsv, train_source3.tsv, train_ground_truth.tsv",
+    "dataset/test": "test_source1.tsv, test_source2.tsv, test_source3.tsv",
+    "code/business_entity_resolution/src": "Data preprocessing, blocking, feature extraction, model training, and inference scripts",
+    "code/business_entity_resolution/README.md": "Self-contained reproduction instructions",
+    "code/business_entity_resolution/requirements.txt": "Pinned dependencies",
+    "output": "matching_results.tsv and candidate_pairs.tsv",
+    "utils/validate_submission.py": "Submission verification script",
+    "Documentation_template.md": "Methodology report"
+  },
+  "testing_strategy": {
+    "framework": "pytest + utils/validate_submission.py",
+    "validation_split": "Stratified holdout validation set scored via exact macro F_0.5 formula",
+    "checks": [
+      "No duplicate source1_entity_id rows",
+      "No self-matches or S1 IDs in matched_entity_ids",
+      "All matched IDs exist in test set and candidate pairs",
+      "Format compliance with validator"
+    ]
+  },
+  "never_do": [
+    "Never use external lookup APIs, geocoders, or internet queries (strictly prohibited by fair-play rules)",
+    "Never hard-code country filters to only US and India (must handle France and any new country)",
+    "Never produce duplicate entity IDs in matched_entity_ids",
+    "Never match Source 1 entities to Source 1",
+    "Never omit any Source 1 entity from matching_results.tsv",
+    "Never use models larger than 8B parameters or non-MIT/Apache 2.0 licenses"
+  ],
+  "preferred_patterns": [
+    "Fast text normalization with regex stripping legal abbreviations (Corp, Ltd, Pvt, LLC) into standardized tokens",
+    "Polars for high-speed string processing and dataframe operations",
+    "RapidFuzz cdist for ultra-fast vectorized string similarity calculations",
+    "LightGBM with stratified K-Fold cross validation and threshold search maximizing F_0.5"
+  ]
+}

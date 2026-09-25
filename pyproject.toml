@@ -1,0 +1,46 @@
+[project]
+name = "amazon-ml-challenge-2026"
+version = "1.0.0"
+description = "Amazon ML Challenge 2026: Business Entity Resolution Solution"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "scikit-learn>=1.3.0",
+    "lightgbm>=4.0.0",
+    "rapidfuzz>=3.0.0",
+    "joblib>=1.3.0",
+    "tqdm>=4.65.0"
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+exclude = [
+    ".venv",
+    "code/business_entity_resolution"
+]
+
+[tool.ruff.lint]
+ignore = [
+    "E501", # line too long
+    "EXE001", # shebang on non-executable
+    "I001", # import unsorted
+    "F401", # unused import (in __init__)
+    "E402"  # module level import not at top of file
+]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+follow_imports = "silent"
+exclude = [
+    "^code/business_entity_resolution/",
+    "^\\.venv/"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

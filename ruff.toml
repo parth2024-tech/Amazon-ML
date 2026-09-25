@@ -1,0 +1,10 @@
+line-length = 120
+target-version = "py311"
+exclude = [
+    ".venv",
+    "code/business_entity_resolution"
+]
+
+[lint]
+select = ["E"]
+ignore = ["E501"]

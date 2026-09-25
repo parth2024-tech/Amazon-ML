@@ -1,0 +1,71 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# pytest / test cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Type checking / linting cache
+.mypy_cache/
+.ruff_cache/
+
+# Large datasets (preserve directory structure via .gitkeep)
+data/train/*.tsv
+data/train/*.csv
+data/test/*.tsv
+data/test/*.csv
+dataset/train/*.tsv
+dataset/train/*.csv
+dataset/test/*.tsv
+dataset/test/*.csv
+
+# Submission zip archives
+*.zip
+*.tar.gz
+
+# macOS / Linux / Windows system files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# IDE files
+.idea/
+.vscode/
