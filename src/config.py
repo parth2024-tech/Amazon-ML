@@ -53,14 +53,17 @@ LIGHTGBM_PARAMS = {
     "objective": "binary",
     "metric": "binary_logloss",
     "boosting_type": "gbdt",
-    "learning_rate": 0.04,
-    "max_depth": 6,
-    "num_leaves": 31,
-    "min_child_samples": 20,
+    "learning_rate": 0.02,
+    "max_depth": 8,
+    "num_leaves": 127,
+    "min_child_samples": 15,
     "subsample": 0.8,
-    "colsample_bytree": 0.8,
+    "colsample_bytree": 0.7,
+    "reg_alpha": 0.05,
+    "reg_lambda": 1.0,
     "random_state": 42,
-    "n_estimators": 400,
+    "n_estimators": 1500,
+    "n_jobs": -1,
     "verbose": -1
 }
 

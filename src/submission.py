@@ -78,7 +78,8 @@ def package_submission_zip(team_name: str, output_zip_path: Path | None = None) 
         "output/candidate_pairs.tsv",
         "Documentation_template.md",
         "code/business_entity_resolution/README.md",
-        "code/business_entity_resolution/requirements.txt"
+        "code/business_entity_resolution/requirements.txt",
+        "code/business_entity_resolution/run.py"
     ]
 
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:

@@ -46,7 +46,7 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 
-# Large datasets (preserve directory structure via .gitkeep)
+# Large datasets and caches (preserve directory structure via .gitkeep)
 data/train/*.tsv
 data/train/*.csv
 data/test/*.tsv
@@ -55,10 +55,17 @@ dataset/train/*.tsv
 dataset/train/*.csv
 dataset/test/*.tsv
 dataset/test/*.csv
+*.parquet
+.cache*
 
-# Submission zip archives
+# Output files and submissions
+output/
+outputs/
 *.zip
 *.tar.gz
+
+# Trained models (large binaries >100MB)
+models/*.joblib
 
 # macOS / Linux / Windows system files
 .DS_Store

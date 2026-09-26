@@ -14,7 +14,7 @@ def optimize_f05_threshold(
     df_pairs: pd.DataFrame,
     probabilities: np.ndarray,
     ground_truth: dict[str, set[str]],
-    threshold_grid: np.ndarray = np.linspace(0.20, 0.85, 35)
+    threshold_grid: np.ndarray = np.linspace(0.20, 0.95, 50)
 ) -> tuple[float, float, dict]:
     """
     Searches the decision threshold grid to maximize macro F_0.5 at the entity level.

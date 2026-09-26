@@ -14,3 +14,5 @@ scipy==1.18.1
 six==1.17.0
 threadpoolctl==3.7.0
 tqdm==4.70.1
+anyascii==0.3.3
+xgboost==3.4.1

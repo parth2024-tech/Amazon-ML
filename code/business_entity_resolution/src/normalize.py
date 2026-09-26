@@ -8,16 +8,50 @@ Handles international records (US, India, France, and any open country set).
 import re
 import unicodedata
 from typing import List, Optional
+from anyascii import anyascii
 
 # Legal entity suffixes across US, India, UK, France, Germany, etc.
 LEGAL_SUFFIXES = [
-    r"\bpvt\b", r"\bltd\b", r"\bpvt\s+ltd\b", r"\bprivate\s+limited\b",
-    r"\binc\b", r"\bincorporated\b", r"\bcorp\b", r"\bcorporation\b",
-    r"\bllc\b", r"\bllp\b", r"\bco\b", r"\bcompany\b",
-    r"\bsa\b", r"\bsarl\b", r"\bsas\b", r"\beurl\b", r"\bgmbh\b",
-    r"\benterprises?\b", r"\bservices?\b", r"\bsolutions?\b", r"\btechnologies?\b"
+    r"\bpublic\s+limited\s+company\b",
+    r"\bprivate\s+limited\b",
+    r"\bpvt\s+ltd\b",
+    r"\bltd\b",
+    r"\bpvt\b",
+    r"\binc\b",
+    r"\bincorporated\b",
+    r"\bcorp\b",
+    r"\bcorporation\b",
+    r"\bllc\b",
+    r"\bllp\b",
+    r"\bco\b",
+    r"\bcompany\b",
+    r"\bsa\b",
+    r"\bsarl\b",
+    r"\bsas\b",
+    r"\beurl\b",
+    r"\bgmbh\b",
+    r"\benterprises?\b",
+    r"\bservices?\b",
+    r"\bsolutions?\b",
+    r"\btechnologies?\b",
+    r"\bconsultants?\b",
+    r"\bconsulting\b",
+    r"\bcenters?\b",
+    r"\bcentres?\b",
+    r"\bassociates\b",
+    r"\bholdings\b",
+    r"\bgroups?\b",
+    # Transliterated Indic legal forms
+    r"\bpiraivet\s+limitet\b",
+    r"\bpraivet\s+limited\b",
+    r"\bpraivet\s+limitet\b",
+    r"\belelp\b",
+    r"\blimitet\b",
+    r"\bpiraivet\b",
+    r"\bpraivet\b"
 ]
 LEGAL_SUFFIX_RE = re.compile(r"|".join(LEGAL_SUFFIXES), flags=re.IGNORECASE)
+DOMAIN_RE = re.compile(r"\.(com|net|org|in|co\.in|io|biz|info|edu|gov|us|fr)\b", flags=re.IGNORECASE)
 
 # Standard address abbreviation mappings
 ADDRESS_ABBREVIATIONS = {
@@ -43,9 +77,10 @@ ADDRESS_ABBREVIATIONS = {
 }
 
 def unicode_normalize(text: str | None) -> str:
-    """Normalize unicode, decompose and strip accents (é -> e, etc.)."""
+    """Normalize unicode, transliterate non-Latin scripts, decompose and strip accents (é -> e, etc.)."""
     if not text or not isinstance(text, str):
         return ""
+    text = anyascii(text)
     text = unicodedata.normalize("NFKD", text)
     text = "".join(c for c in text if not unicodedata.combining(c))
     return text.lower()
@@ -58,20 +93,31 @@ def normalize_business_name(name: str | None, strip_legal: bool = True) -> str:
     """
     Standardize business names:
     - Unicode & lowercase
+    - Strip web domain extensions (.com, .net, etc.)
     - Replace '&' and '+' with 'and'
+    - Normalize punctuation delimiters to spaces
+    - Collapse single-letter acronym sequences (l l c -> llc)
     - Remove/expand legal entity suffixes
-    - Remove special punctuation while preserving alphanumerics
+    - Remove special punctuation while preserving alphanumerics (including Unicode)
     """
     text = unicode_normalize(name)
     if not text:
         return ""
 
+    text = DOMAIN_RE.sub(" ", text)
     text = text.replace("&", " and ").replace("+", " and ")
+
+    # Punctuation to spaces
+    text = re.sub(r"[.,\-–—_/\\()\"'’`#@:;!*\[\]{}~?]", " ", text)
+    # Collapse single-letter acronyms: "l l c" -> "llc", "d b a" -> "dba"
+    text = re.sub(r"\b([a-z])\s+([a-z])\s+([a-z])\b", r"\1\2\3", text)
+    text = re.sub(r"\b([a-z])\s+([a-z])\b", r"\1\2", text)
 
     if strip_legal:
         text = LEGAL_SUFFIX_RE.sub(" ", text)
 
-    text = re.sub(r"[^a-z0-9\s]", " ", text)
+    # Preserve alphanumeric characters across all scripts (Latin, Devanagari, Tamil, etc.)
+    text = "".join(c for c in text if c.isalnum() or c.isspace())
     return normalize_whitespace(text)
 
 def normalize_address(address: str | None) -> str:
@@ -97,12 +143,17 @@ def normalize_address(address: str | None) -> str:
 def extract_geographic_tokens(address: str | None) -> list[str]:
     """
     Extract postal codes (US 5-digit, India 6-digit, France 5-digit),
-    and building/plot numbers.
+    and building/plot numbers. Normalizes numbers by removing leading zeros.
     """
     if not address:
         return []
-    # Extract digit strings of 2 to 8 digits
-    return re.findall(r"\b\d{2,8}\b", str(address))
+    raw = re.findall(r"\d+", str(address))
+    tokens: list[str] = []
+    for t in raw:
+        clean = t.lstrip("0")
+        if clean and len(clean) <= 8 and clean not in tokens:
+            tokens.append(clean)
+    return tokens
 
 def normalize_country(country: str | None) -> str:
     """Standardize country label without restricting to a closed set."""
@@ -116,3 +167,4 @@ def normalize_country(country: str | None) -> str:
     if c in ("fr", "fra", "france"):
         return "france"
     return c
+

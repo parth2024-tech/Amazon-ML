@@ -6,29 +6,29 @@ This directory contains the self-contained, reproducible pipeline for the Amazon
 
 Our solution addresses cross-source noisy business entity matching through an end-to-end multi-stage architecture engineered specifically to maximize macro-averaged **$F_{0.5}$**:
 
-1. **Text Normalization & Entity Standardization (`src/preprocessing.py`)**:
+1. **Text Normalization & Entity Standardization (`src/normalize.py`)**:
    - Universal Unicode normalization and diacritic removal (handling US, India, France, and unseen international characters).
    - Legal suffix detection and stripping (`pvt ltd`, `inc`, `corp`, `llc`, `sarl`, `sa`, etc.).
    - Standard address abbreviation normalization (`rd` -> `road`, `st` -> `street`, etc.).
    - Country-agnostic processing with no hardcoded country dependencies.
 
 2. **Multi-Index High-Recall Candidate Generation (`src/blocking.py`)**:
-   - TF-IDF character n-gram ($3-4$ grams) cosine similarity via sparse matrix multiplication.
-   - Significant token inverted index for exact name overlap.
-   - Country-stratified candidate generation with graceful fallback to global target search.
-   - Reaches $\ge 98\%$ recall ceiling while pruning candidate search space from $O(N^2)$ to Top-20 per Source 1 entity.
+   - Multi-channel vote-ranked inverted index across exact name, core name, sorted tokens, 2-grams, address numbers, street words, and prefix anchors.
+   - Cross-script invariant anchoring via compound two-number keys `(num1, num2)`.
+   - Frequency-gated ingestion preventing posting list explosion and high memory footprint.
+   - Delivers > 98% channel union recall and 85%+ voted recall ceiling under 40 candidates per entity.
 
 3. **Pairwise Feature Engineering (`src/features.py`)**:
-   - String distance metrics: Levenshtein ratio, Partial ratio, Token Sort ratio, Token Set ratio, Jaro-Winkler.
+   - High-performance RapidFuzz string metrics: Levenshtein ratio, Partial ratio, Token Sort ratio, Token Set ratio, Jaro-Winkler.
    - Character 3-gram Jaccard and word-level Jaccard similarity.
    - Address digit / PIN / ZIP code overlap and building number alignment.
-   - Cross-field combined text similarity.
+   - Cross-field combined text similarity and interaction flags.
 
-4. **GroupKFold GBDT Ensemble (`src/models.py`)**:
+4. **GroupKFold GBDT Ensemble (`src/train.py`)**:
    - LightGBM binary classifier trained with 5-fold `GroupKFold` grouped by `source1_entity_id` to strictly prevent data leakage across folds.
    - Class weight balancing to handle high candidate negative-to-positive ratio.
 
-5. **$F_{0.5}$-Optimal Decision Threshold & Singleton Guard (`src/postprocessing.py`)**:
+5. **$F_{0.5}$-Optimal Decision Threshold & Singleton Guard (`src/threshold.py`)**:
    - Grid search optimization directly maximizing macro $F_{0.5}$.
    - High-precision thresholding: since $F_{0.5}$ penalizes false positives twice as heavily as false negatives, high confidence cutoffs prevent disastrous singleton false merges (which drop an entity score from 1.0 to 0.0).
 
@@ -54,12 +54,11 @@ pip install -r requirements.txt
 To train on `dataset/train/`, evaluate cross-validation, run inference on `dataset/test/`, and generate submission files in `output/`:
 
 ```bash
-# Run from repository root
-python3 code/business_entity_resolution/src/pipeline.py \
-    --train-dir dataset/train \
-    --test-dir dataset/test \
-    --output-dir output \
-    --model-path models/lgb_model.joblib
+# Run full pipeline end-to-end
+python3 run.py --mode full --team-name <your_team_name>
+
+# Or run with a fast stratified sample for benchmarking
+python3 run.py --mode full --sample 10000 --team-name <your_team_name>
 ```
 
 This will automatically produce:
