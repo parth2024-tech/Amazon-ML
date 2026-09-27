@@ -159,17 +159,17 @@ class EntityClassifier:
         """Ensemble average across all trained fold models."""
         if not self.models:
             raise RuntimeError("Classifier has not been trained yet.")
-        X = df_pairs[self.feature_cols].values
-        probs = np.zeros(len(df_pairs))
+        X = df_pairs[self.feature_cols].to_numpy(dtype=np.float32)
+        probs = np.zeros(len(df_pairs), dtype=np.float32)
         if self.model_type == "ensemble":
             for m_lgb, m_xgb in self.models:
-                p_lgb = np.asarray(m_lgb.predict_proba(X))[:, 1]
-                p_xgb = np.asarray(m_xgb.predict_proba(X))[:, 1]
+                p_lgb = np.asarray(m_lgb.predict_proba(X), dtype=np.float32)[:, 1]
+                p_xgb = np.asarray(m_xgb.predict_proba(X), dtype=np.float32)[:, 1]
                 probs += 0.5 * p_lgb + 0.5 * p_xgb
             return probs / len(self.models)
         else:
             for m in self.models:
-                probs += np.asarray(m.predict_proba(X))[:, 1]
+                probs += np.asarray(m.predict_proba(X), dtype=np.float32)[:, 1]
             return probs / len(self.models)
 
     def save(self, path: str):
